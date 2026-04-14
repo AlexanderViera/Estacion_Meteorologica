@@ -1,4 +1,4 @@
-from xmlrpc import client
+
 from mqtt_as import MQTTClient
 from mqtt_local import config
 import uasyncio as asyncio
@@ -44,36 +44,18 @@ async def main(client):
         
         # 2. Verificación y Publicación
         if temp is not None:
-            await client.publish('estacion/temperatura', f"{temp:.2f}", qos=1)
-            await client.publish('estacion/presion', f"{pres:.2f}", qos=1)
-            await client.publish('estacion/humedad', f"{hum:.2f}", qos=1)
-
-            await client.publish('estacion/viento', f"{vel:.1f}", qos=1)
-
-            print(f"Publicado -> Temp: {temp:.2f}°C | Pres: {pres:.2f} hPa | Hum: {hum:.2f}% | Vel: {vel:.1f} Hz/s")
+            await client.publish('estacion/temperatura', f"{temp:.2f} °C", qos=1)
+            await client.publish('estacion/presion', f"{pres:.2f} hPa", qos=1)
+            await client.publish('estacion/humedad', f"{hum:.2f}%", qos=1)
+            print(f"Publicado -> Temp: {temp:.2f}°C | Pres: {pres:.2f} hPa | Hum: {hum:.2f}% | Vel: {vel:.1f} m/s")
         else:
             print("Esperando lectura válida del BME280...")
+
+        await client.publish('estacion/viento', f"{vel:.1f} m/s", qos=1)
             
         # 3. Pausa operativa
-        await asyncio.sleep(20)
+        await asyncio.sleep(5)
 
-    
-    # 2. LANZAMOS LA TAREA DE CONTEO EN SEGUNDO PLANO
-    # Esto se queda escuchando los pulsos del pin 22 todo el tiempo
-        
-        # --- Publicación ---
-        if temp is not None:
-            await client.publish('estacion/temperatura', f"{temp:.2f}", qos=1)
-            await client.publish('estacion/presion', f"{pres:.2f}", qos=1)
-            await client.publish('estacion/humedad', f"{hum:.2f}", qos=1)
-            # Publicamos la velocidad
-            await client.publish('estacion/viento', f"{vel:.1f}", qos=1)
-            
-            print(f"Publicado -> Temp: {temp:.2f}°C | Viento: {vel:.1f} Hz/s")
-        else:
-            print("Error en sensores...")
-            
-        await asyncio.sleep(20)
 
 
 # ==========================================
