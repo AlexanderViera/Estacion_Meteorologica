@@ -4,7 +4,7 @@ import uasyncio as asyncio
 from sensores.temp_hum_presion import SensorAmbiente
 
 # ==========================================
-# 1. FUNCIONES CALLBACK (Interrupciones)
+# 1. FUNCIONES
 # ==========================================
 async def wifi_han(state):
     print('Wifi is ', 'up' if state else 'down')
@@ -20,7 +20,7 @@ def sub_cb(topic, msg, retained):
 
 
 # ==========================================
-# 2. BUCLE PRINCIPAL (Telemetría)
+# 2. BUCLE PRINCIPAL
 # ==========================================
 async def main(client):
     await client.connect() # Obliga a conectar antes de continuar
@@ -47,7 +47,7 @@ async def main(client):
 
 
 # ==========================================
-# 3. CONFIGURACIÓN Y ARRANQUE (El "Pegamento")
+# 3. CONFIGURACIÓN Y ARRANQUE
 # ==========================================
 config['wifi_coro'] = wifi_han
 config['connect_coro'] = conn_han
