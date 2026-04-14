@@ -28,6 +28,7 @@ async def main(client):
     
     # Creamos el objeto del sensor
     estacion_clima = SensorAmbiente(sda_pin=14, scl_pin=15)
+    
 
     while True:
         # 1. Adquisición
