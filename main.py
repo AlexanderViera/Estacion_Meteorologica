@@ -1,14 +1,68 @@
+from mqtt_as import MQTTClient
+from mqtt_local import config
 import uasyncio as asyncio
 from sensores.temp_hum_presion import SensorAmbiente
 
-async def main():
+# ==========================================
+# 1. FUNCIONES CALLBACK (Interrupciones)
+# ==========================================
+async def wifi_han(state):
+    print('Wifi is ', 'up' if state else 'down')
+    await asyncio.sleep(1)
+
+async def conn_han(client):
+    # Por ahora no nos suscribimos a nada, pero la función debe existir
+    pass 
+
+def sub_cb(topic, msg, retained):
+    # Esta función maneja los mensajes que llegan. La dejamos lista por las dudas.
+    print(f"Recibido en {topic.decode()}: {msg.decode()}")
+
+
+# ==========================================
+# 2. BUCLE PRINCIPAL (Telemetría)
+# ==========================================
+async def main(client):
+    await client.connect() # Obliga a conectar antes de continuar
+    await asyncio.sleep(2) # Esperamos a que el broker procese la conexión
+    
     # Creamos el objeto del sensor
     estacion_clima = SensorAmbiente(sda_pin=14, scl_pin=15)
 
     while True:
+        # 1. Adquisición
         temp, pres, hum = estacion_clima.leer_todo()
-        print(f"Temp: {temp:.2f}°C | Pres: {pres:.2f} hPa | Hum: {hum:.2f}%")
-        await asyncio.sleep(5)
+        
+        # 2. Verificación y Publicación
+        if temp is not None:
+            await client.publish('estacion/temperatura', f"{temp:.2f}", qos=1)
+            await client.publish('estacion/presion', f"{pres:.2f}", qos=1)
+            await client.publish('estacion/humedad', f"{hum:.2f}", qos=1)
+            print(f"Publicado -> Temp: {temp:.2f}°C | Pres: {pres:.2f} hPa | Hum: {hum:.2f}%")
+        else:
+            print("Esperando lectura válida del BME280...")
+            
+        # 3. Pausa operativa
+        await asyncio.sleep(20)
 
-if __name__ == "__main__":
-    asyncio.run(main())
+
+# ==========================================
+# 3. CONFIGURACIÓN Y ARRANQUE (El "Pegamento")
+# ==========================================
+config['wifi_coro'] = wifi_han
+config['connect_coro'] = conn_han
+config['subs_cb'] = sub_cb
+
+# IMPORTANTE: Cambiá esto a True si usas un broker online (ej. HiveMQ/Adafruit)
+# o dejalo en False si es un broker local en red (ej. Mosquitto sin encriptar)
+config['ssl'] = True
+
+MQTTClient.DEBUG = True  
+client = MQTTClient(config)
+
+# Toma de control de la Raspberry Pi Pico
+try:
+    asyncio.run(main(client))
+finally:
+    client.close()
+    asyncio.new_event_loop()
