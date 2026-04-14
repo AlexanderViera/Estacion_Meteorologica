@@ -1,5 +1,5 @@
 from machine import Pin, I2C
-from librerias.bme280 import BME280 # Importamos la librería que descargaste
+from lib.bme280 import BME280 # Importamos la librería que descargaste
 
 class SensorAmbiente:
     def __init__(self, sda_pin=14, scl_pin=15, freq=400000):
