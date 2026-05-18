@@ -3,7 +3,7 @@ import time
 
 class SensorLuz:
     def __init__(self, sda_pin=0, scl_pin=1, freq=400000):
-        # Como dejo flotando ADDR, la dirección será 0x23.
+        # Como dejo flotando ADDR, la dirección será 0x23. MANDAR ADDR A MASA DESPUES
         self.address = 0x23
         self.i2c = I2C(0, sda=Pin(sda_pin), scl=Pin(scl_pin), freq=freq)
         

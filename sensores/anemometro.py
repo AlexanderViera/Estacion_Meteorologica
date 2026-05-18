@@ -2,7 +2,7 @@ from machine import Pin
 from time import ticks_us, ticks_diff
 import uasyncio as asyncio
 
-class AsyncPin:
+class sensor_velocidad:
     def __init__(self, pin_num, trigger):
         self.pin = Pin(pin_num, Pin.IN, Pin.PULL_DOWN)
         self.flag = asyncio.ThreadSafeFlag()

@@ -2,7 +2,7 @@ from mqtt_as import MQTTClient
 from mqtt_local import config
 import uasyncio as asyncio
 from sensores.temp_hum_presion import SensorAmbiente
-from sensores.anemometro import AsyncPin
+from sensores.anemometro import sensor_velocidad
 from sensores.intensidad_luminica import SensorLuz
 from sensores.veleta import Veleta
 from machine import Pin
@@ -32,7 +32,7 @@ async def main(client):
     
     # Creamos el objeto del sensor
     estacion_clima = SensorAmbiente(sda_pin=14, scl_pin=15)
-    anemometro = AsyncPin(22, Pin.IRQ_RISING) # <--- INSTANCIAMOS ANEMÓMETRO
+    anemometro = sensor_velocidad(22, Pin.IRQ_RISING) # <--- INSTANCIAMOS ANEMÓMETRO
     luxometro = SensorLuz(sda_pin=0, scl_pin=1)
     veleta = Veleta(28)
 
