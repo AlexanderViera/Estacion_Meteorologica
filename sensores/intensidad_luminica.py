@@ -2,21 +2,17 @@ from machine import Pin, I2C
 import time
 
 class SensorLuz:
-    def __init__(self, sda_pin=0, scl_pin=1, freq=400000):
-        # Como dejo flotando ADDR, la dirección será 0x23. MANDAR ADDR A MASA DESPUES
+    def __init__(self, i2c_bus):
         self.address = 0x23
-        self.i2c = I2C(0, sda=Pin(sda_pin), scl=Pin(scl_pin), freq=freq)
-        
-        # 0x10 es el comando para "Medición continua de alta resolución (1 Lux)"
+        self.i2c = i2c_bus
         self.modo_continuo = 0x10 
         
-        # Le enviamos el comando de arranque
         try:
             self.i2c.writeto(self.address, bytes([self.modo_continuo]))
-            # El manual pide esperar al menos 120ms para la primera medición
             time.sleep_ms(150) 
+            print("BH1750 inicializado correctamente.")
         except OSError:
-            print("Error: No se encontró el BH1750. Revisá cables SDA/SCL y el pin ADDR.")
+            print("Error: No se encontró el BH1750. Revisá el bus compartido.")
 
     def leer_lux(self):
         """Devuelve la intensidad lumínica en Lux"""

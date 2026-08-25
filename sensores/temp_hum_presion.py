@@ -2,12 +2,9 @@ from machine import Pin, I2C
 from lib.bme280 import BME280 # Importamos la librería que descargaste
 
 class SensorAmbiente:
-    def __init__(self, sda_pin=14, scl_pin=15, freq=400000):
-        # 1. Configuramos el bus I2C (usamos el canal 0 de la Pico)
-        self.i2c = I2C(1, sda=Pin(sda_pin), scl=Pin(scl_pin), freq=freq)
+    def __init__(self, i2c_bus):
+        self.i2c = i2c_bus
         
-        # 2. Inicializamos el sensor BME280
-        # El sensor suele usar la dirección 0x76 o 0x77
         try:
             self.sensor = BME280(i2c=self.i2c, address=0x76)
             print("BME280 inicializado correctamente.")
