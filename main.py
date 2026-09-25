@@ -20,7 +20,7 @@ async def conn_han(client):
     pass 
 
 def sub_cb(topic, msg, retained):
-    # Esta función maneja los mensajes que llegan. La dejamos lista por las dudas.
+    # Esta función maneja los mensajes que llegan.
     print(f"Recibido en {topic.decode()}: {msg.decode()}")
 
 
@@ -57,6 +57,8 @@ async def main(client):
         hum_val = round(hum, 2) if hum is not None else None
         vel_val = round(vel, 1) if vel is not None else None
         luz_val = round(luz, 1) if luz is not None else None
+        luz_val = luz_val*2.36;
+        #vel_val = vel_val*10;
         #luz_val = 10000;
         valores_dict = {
             "temperatura": temp_val,
@@ -96,7 +98,7 @@ async def main(client):
             
         await client.publish('estacion/mediciones/pico', valores_json, qos=1)
         #await client.publish('estacion/mediciones/#', valores_json, qos=1)
-        await asyncio.sleep(10)
+        await asyncio.sleep(2)
         print("\n")
 
 
@@ -108,14 +110,11 @@ config['wifi_coro'] = wifi_han
 config['connect_coro'] = conn_han
 config['subs_cb'] = sub_cb
 
-# IMPORTANTE: Cambiar esto a True si se usa un broker online
-# o dejar en False si es un broker local en red
 config['ssl'] = True
 
 MQTTClient.DEBUG = True  
 client = MQTTClient(config)
 
-# Toma de control de la Raspberry Pi Pico
 try:
     asyncio.run(main(client))
 finally:

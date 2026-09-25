@@ -1,5 +1,5 @@
 from machine import Pin, I2C
-from lib.bme280 import BME280 # Importamos la librería que descargaste
+from lib.bme280 import BME280
 
 class SensorAmbiente:
     def __init__(self, i2c_bus):
@@ -14,14 +14,7 @@ class SensorAmbiente:
     def leer_todo(self):
         """Devuelve una tupla con (temperatura, presión, humedad)"""
         try:
-            # La librería devuelve strings con unidades (ej: '25.5C')
-            # Algunos métodos devuelven valores numéricos según la versión
             t, p, h = self.sensor.read_compensated_data()
-            
-            # Procesamos para tener números limpios
-            # temperatura = t / 100.0
-            # presion = p / 256.0 / 100.0 # Convertimos a hPa
-            # humedad = h / 1024.0
             temperatura = t
             presion = p / 100.0 # Convertimos a hPa
             humedad = h

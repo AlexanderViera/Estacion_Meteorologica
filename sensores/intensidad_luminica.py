@@ -17,7 +17,7 @@ class SensorLuz:
     def leer_lux(self):
         """Devuelve la intensidad lumínica en Lux"""
         try:
-            # El sensor devuelve exactamente 2 bytes con el valor de la luz
+            # El sensor devuelve 2 bytes con el valor de la luz
             data = self.i2c.readfrom(self.address, 2)
             
             # Matemática de la hoja de datos: 
