@@ -21,3 +21,6 @@ class Pluviometro:
 
     def leer_lluvia_mm(self):
         return self.contador_pulsos * self.mm_por_basculacion
+
+    def restaurar_memoria(self, mm_guardados):
+        self.contador_pulsos = int(mm_guardados / self.mm_por_basculacion)
