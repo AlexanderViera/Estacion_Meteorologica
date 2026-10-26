@@ -15,7 +15,7 @@ class Pluviometro:
         
         tiempo_actual = time.ticks_ms()
         
-        if time.ticks_diff(tiempo_actual, self.ultimo_pulso_ms) > 100:
+        if time.ticks_diff(tiempo_actual, self.ultimo_pulso_ms) > 200:
             self.contador_pulsos += 1
             self.ultimo_pulso_ms = tiempo_actual
 

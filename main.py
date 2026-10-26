@@ -9,7 +9,9 @@ from sensores.veleta import Veleta
 from sensores.pluviometro import Pluviometro
 from sensores.bateria import MedidorBateria
 from memoria_lluvia import guardar_lluvia, leer_lluvia
-from machine import Pin, I2C
+from interfaz import BotonReset, LedEstado
+from machine import Pin, I2C, WDT
+import machine
 
 # ==========================================
 # FUNCIONES
@@ -24,6 +26,12 @@ async def conn_han(client):
 def sub_cb(topic, msg, retained):
     # Esta función maneja los mensajes que llegan.
     print(f"Recibido en {topic.decode()}: {msg.decode()}")
+
+async def aviso_watchdog(wdt):
+    """Alimenta al perro guardián cada 5 segundos. Si uasyncio se cuelga, esto falla y la placa se reinicia."""
+    while True:
+        wdt.feed()
+        await asyncio.sleep(5)
 
 
 async def bucle_sensores(client, estacion_clima, anemometro, luxometro, veleta, pluviometro, monitor_ups):
@@ -90,6 +98,10 @@ async def bucle_sensores(client, estacion_clima, anemometro, luxometro, veleta, 
 # ==========================================
 
 async def main(client):
+    # INICIALIZAR WATCHDOG DE HARDWARE (8 segundos de límite)
+    wdt = WDT(timeout=8000)
+    asyncio.create_task(aviso_watchdog(wdt))
+
     # INICIALIZAR SENSORES
     i2c_bus = I2C(1, sda=Pin(14), scl=Pin(15), freq=400000)
     estacion_clima = SensorAmbiente(i2c_bus)
@@ -98,6 +110,16 @@ async def main(client):
     veleta = Veleta(26)
     pluviometro = Pluviometro(pin_num=21, mm_por_basculacion=0.3)
     monitor_ups = MedidorBateria(pin=27)
+
+    # ------------------------- PARTE INTERFAZ -----------------------------------
+    boton_reinicio = BotonReset(pin_num=7)
+    led_power = LedEstado(pin_num=6)
+    led_wifi = LedEstado(pin_num=5)
+
+    asyncio.create_task(led_power.rutear_parpadeo(lambda: True))
+    asyncio.create_task(led_wifi.rutear_parpadeo(lambda: client.isconnected()))
+
+    # ----------------------------------------------------------------------------
 
     # RECUPERAR LLUVIA OFFLINE
     lluvia_guardada = leer_lluvia()
@@ -110,13 +132,30 @@ async def main(client):
     asyncio.create_task(bucle_sensores(client, estacion_clima, anemometro, luxometro, veleta, pluviometro, monitor_ups))
 
     # GESTIÓN DE CONEXIÓN (El bucle principal solo observa la conexión a la red)
+    tiempo_sin_conexion = 0
+    LIMITE_DESCONEXION = 900  # 900 segundos = 15 minutos
     while True:
         try:
             if not client.isconnected():
                 print("Intentando conectar al broker MQTT...")
                 await client.connect()
+            else:
+                # Si estamos conectados, reseteamos el contador
+                tiempo_sin_conexion = 0
         except Exception as e:
             print(f"Error de conexión: {e}. Reintentando...")
+
+        # Si después de intentar conectar seguimos offline, sumamos tiempo
+        if not client.isconnected():
+            tiempo_sin_conexion += 10
+            print(f"Sin conexión. Tiempo acumulado: {tiempo_sin_conexion}/{LIMITE_DESCONEXION} segs.")
+            
+            # Evaluar condición del Watchdog Lógico
+            if tiempo_sin_conexion >= LIMITE_DESCONEXION:
+                print("\n[CRÍTICO] Tiempo límite de desconexión superado.")
+                print("Posible Livelock del chip Wi-Fi. Forzando Hard Reset...\n")
+                await asyncio.sleep(1) # Pausa para que se imprima el mensaje en consola
+                machine.reset() # Reinicio físico total
         
         # Revisa el estado de la conexión cada 10 segundos
         await asyncio.sleep(10)
